@@ -1,66 +1,24 @@
-// import propTypes from 'prop-types'
-// import logo from './logo.svg';
-// import ReactDOM from 'react-dom';
-import React, { Component } from 'react';
-import './App.css';
-class Child extends Component {
-  state = {
-    text: this.props.num
-  }
-  
-  static getDerivedStateFromProps(props){
-  console.log('getDerivedStateFromProps')
-    return ({text: props.num})
-  }
+var express = require('express');
+var bodyParser = require("body-parser");
 
-  render(){
-    return(
-      <div>
-        <div style={{borderStyle: 'solid', borderColor: 'grey'}}>
-        <h1>This is Child Component</h1>
-        <h2>{this.state.text}</h2>
-        </div>
-      </div>
-    )
-  }
-}
+var users = [
+    { id: 1, username: "umar", password: 'abcd1234' },
+    { id: 2, username: "test", password: '1234' },
+]
 
-class App extends Component {  
-  state = {
-    number: 0,
-    date: new Date()
-  } 
+var server = express()
 
-  componentWillMount(){
-    console.log('componentWillMount')
-  }
+server.use(express.static('./build'))
+server.use(bodyParser.urlencoded({ extended: true }))
+server.use(bodyParser.json())
 
-  componentDidMount(){
-  console.log('componentDidMount Number ')
-    setInterval(()=>{
-      this.setState(()=>({
-        number: Math.ceil(Math.random() * 10),
-        date: new Date()
-      }))
-    }, 1000)
-  }
- 
-// setTimeout(() => {
-//   ReactDOM.render(<Child />, document.getElementById('root'))
-// }, 2000)  
+require('./server/config/db-config');
+require('./server/config/passport-config')(server, users);
+require('./server/routes/all-routes')(server);
 
-  render() {
-    console.log('render')
-    return (
-           <div className="App">
-           <Child num = {this.state.number} />       
-           <div style={{borderStyle: "solid", color: 'green'}}>
-           <h1>This is Parent Component</h1>
-           <hr></hr>
-           <h2 style={{color: 'purple'}}> Current time :{this.state.date.toLocaleTimeString()}</h2>
-           </div>
-           </div>
-)
-}
-}
-export default App;
+server.use((err, req, res, next) => {
+    console.warn(err)
+    res.status(500).send("Error Catched by error handler.")
+})
+
+server.listen(8000, () => console.log("server is running on port 8000"))
